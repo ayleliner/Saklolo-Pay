@@ -1,0 +1,1202 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <title>Saklolo-Pay Voucher System</title>
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0b3a5c" />
+    <link rel="icon" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <style>
+      :root {
+        --bg: #0b3a5c;
+        --card: #12476e;
+        --gold: #e0a830;
+        --red: #dc3a3f;
+        --tx: #fff;
+        --mut: #a9c3d8;
+        --ok: #3fbf7f;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+      }
+      body {
+        margin: 0;
+        background: #06233a;
+        color: var(--tx);
+        font-family: Inter, system-ui, sans-serif;
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      #app {
+        width: 100%;
+        max-width: 480px;
+        background: var(--bg);
+        min-height: 100vh;
+        padding: 20px 18px 40px;
+      }
+      h1 {
+        font-family: Montserrat, Inter, sans-serif;
+        font-weight: 900;
+        margin: 8px 0 0;
+        text-align: center;
+        letter-spacing: 0.5px;
+      }
+      h2 {
+        font-size: 17px;
+        margin: 18px 0 8px;
+      }
+      .sub {
+        color: var(--gold);
+        text-align: center;
+        letter-spacing: 3px;
+        font-size: 12px;
+        margin-bottom: 26px;
+      }
+      .logo {
+        width: 92px;
+        height: 92px;
+        border: 4px solid var(--gold);
+        border-radius: 50%;
+        margin: 10px auto;
+        display: grid;
+        place-items: center;
+        font-size: 40px;
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        margin: 12px 0 5px;
+        color: #dbe8f2;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 13px;
+        border: 0;
+        border-radius: 8px;
+        font-size: 15px;
+        background: #fff;
+        color: #222;
+      }
+      button {
+        cursor: pointer;
+        border: 0;
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-weight: 700;
+        font-size: 14px;
+        background: var(--gold);
+        color: #222;
+      }
+      .big {
+        width: 100%;
+        background: var(--red);
+        color: #fff;
+        padding: 15px;
+        font-size: 16px;
+        margin-top: 16px;
+      }
+      .link {
+        background: none;
+        color: #cfe3f3;
+        text-decoration: underline;
+        width: 100%;
+        margin-top: 18px;
+        font-weight: 500;
+      }
+      .card {
+        background: var(--card);
+        border-radius: 10px;
+        padding: 12px;
+        margin: 8px 0;
+        font-size: 14px;
+      }
+      .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+      .top b {
+        font-size: 15px;
+      }
+      .tabs {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        margin: 12px 0;
+      }
+      .tabs button {
+        background: var(--card);
+        color: #fff;
+        white-space: nowrap;
+      }
+      .tabs .on {
+        background: var(--gold);
+        color: #222;
+      }
+      .sms {
+        background: #e9f3df;
+        color: #222;
+        border-radius: 12px 12px 12px 2px;
+        padding: 10px;
+        margin: 8px 0;
+        font-size: 14px;
+      }
+      .sms small {
+        color: #667;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 99px;
+        font-size: 11px;
+        font-weight: 700;
+        background: #5a7f9b;
+      }
+      .ok {
+        background: var(--ok);
+        color: #052;
+      }
+      .bad {
+        background: var(--red);
+      }
+      .warn {
+        background: var(--gold);
+        color: #222;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+      }
+      .row > * {
+        flex: 1;
+      }
+      .mut {
+        color: var(--mut);
+        font-size: 12px;
+      }
+      .tbl {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      td,
+      th {
+        padding: 6px;
+        border-bottom: 1px solid #2b6288;
+        text-align: left;
+      }
+      .foot {
+        text-align: center;
+        margin-top: 30px;
+        color: var(--mut);
+        font-size: 12px;
+      }
+      #qr {
+        background: #fff;
+        padding: 10px;
+        border-radius: 10px;
+        display: inline-block;
+      }
+      .code {
+        font-family: monospace;
+        font-size: 18px;
+        letter-spacing: 1px;
+        color: var(--gold);
+      }
+      .net {
+        padding: 8px;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b3a5c;
+        }
+      }
+      /*splash*/
+      #splash {
+        position: fixed;
+        inset: 0;
+        z-index: 99;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition:
+          opacity 0.5s,
+          visibility 0.5s;
+      }
+      #splash.out {
+        opacity: 0;
+        visibility: hidden;
+      }
+      .sp-logo {
+        width: 124px;
+        height: 124px;
+        overflow: visible;
+      }
+      .sp-ring {
+        fill: none;
+        stroke: var(--gold);
+        stroke-width: 4;
+        stroke-linecap: round;
+        stroke-dasharray: 290;
+        stroke-dashoffset: 290;
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+        animation: spd 0.9s ease-out forwards;
+      }
+      .sp-can {
+        fill: var(--gold);
+        transform-box: fill-box;
+        transform-origin: 50% 100%;
+        transform: scaleY(0);
+        animation: spo 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s forwards;
+      }
+      .sp-h {
+        fill: none;
+        stroke: var(--gold);
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-dasharray: 1;
+        stroke-dashoffset: 1;
+        animation: spd 0.4s ease-out 1s forwards;
+      }
+      .sp-arc {
+        fill: none;
+        stroke: #fff;
+        stroke-width: 2.6;
+        stroke-linecap: round;
+        opacity: 0.15;
+        animation: sps 1.4s ease-in-out infinite;
+      }
+      .sp-t {
+        font:
+          900 28px/1 Montserrat,
+          Inter,
+          system-ui,
+          sans-serif;
+        color: #fff;
+        margin-top: 22px;
+        opacity: 0;
+        transform: translateY(10px);
+        animation: spu 0.6s ease-out 1s forwards;
+      }
+      .sp-s {
+        color: var(--gold);
+        letter-spacing: 3px;
+        font-size: 12px;
+        margin-top: 8px;
+        opacity: 0;
+        animation: spu 0.6s ease-out 1.2s forwards;
+      }
+      .sp-bar {
+        width: 140px;
+        height: 4px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.15);
+        overflow: hidden;
+        margin-top: 34px;
+      }
+      .sp-bar i {
+        display: block;
+        width: 40%;
+        height: 100%;
+        border-radius: 4px;
+        background: var(--gold);
+        animation: spb 1.1s ease-in-out infinite;
+      }
+      .sp-f {
+        position: absolute;
+        bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+        color: var(--mut);
+        font-size: 12px;
+      }
+      @keyframes spd {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+      @keyframes spo {
+        to {
+          transform: scaleY(1);
+        }
+      }
+      @keyframes sps {
+        0%,
+        100% {
+          opacity: 0.15;
+        }
+        35% {
+          opacity: 1;
+        }
+      }
+      @keyframes spu {
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      @keyframes spb {
+        from {
+          transform: translateX(-100%);
+        }
+        to {
+          transform: translateX(250%);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #splash * {
+          animation-duration: 0.01s !important;
+          animation-delay: 0s !important;
+          animation-iteration-count: 1 !important;
+        }
+        .sp-arc {
+          animation: none;
+          opacity: 1;
+        }
+        .sp-bar i {
+          animation: none;
+          transform: translateX(75%);
+        }
+      } /*end*/
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <!--splash-->
+    <div id="splash" role="status" aria-label="Loading Saklolo-Pay">
+      <svg class="sp-logo" viewBox="0 0 100 100" aria-hidden="true">
+        <circle class="sp-ring" cx="50" cy="50" r="46" />
+        <path
+          class="sp-can"
+          d="M26 56Q50 22 74 56Q66 50 58 56Q50 50 42 56Q34 50 26 56Z"
+        />
+        <path
+          class="sp-h"
+          pathLength="1"
+          d="M50 56V73Q50 79 44.5 79Q39 79 39 74"
+        />
+        <path
+          class="sp-arc"
+          style="animation-delay: 1.2s"
+          d="M43 31Q50 25 57 31"
+        />
+        <path
+          class="sp-arc"
+          style="animation-delay: 1.4s"
+          d="M38 26Q50 16 62 26"
+        />
+        <path
+          class="sp-arc"
+          style="animation-delay: 1.6s"
+          d="M33 21Q50 7 67 21"
+        />
+      </svg>
+      <div class="sp-t">SAKLOLO-PAY</div>
+      <div class="sp-s">VOUCHER SYSTEM</div>
+      <div class="sp-bar"><i></i></div>
+      <div class="sp-f">made by Ayleliner & Friends</div>
+    </div>
+    <script>
+      (() => {
+        const s = document.getElementById("splash"),
+          a = document.getElementById("app"),
+          t0 = Date.now();
+        let d = 0;
+        const go = () => {
+          if (d++) return;
+          setTimeout(
+            () => {
+              s.classList.add("out");
+              setTimeout(() => s.remove(), 600);
+            },
+            Math.max(0, 2400 - (Date.now() - t0)),
+          );
+        };
+        new MutationObserver((m, o) => {
+          if (a.children.length) {
+            o.disconnect();
+            go();
+          }
+        }).observe(a, { childList: true });
+        setTimeout(go, 7000);
+      })();
+    </script>
+    <!--end-->
+    <script src="/vendor/qrcode.js"></script>
+    <script src="/vendor/jsQR.js"></script>
+    <script>
+      const $ = (s) => document.querySelector(s),
+        A = $("#app"),
+        enc = new TextEncoder(),
+        B32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+      const rnd = (n) =>
+        [...crypto.getRandomValues(new Uint8Array(n))]
+          .map((b) => B32[b % 32])
+          .join("");
+      const esc = (s) =>
+        String(s).replace(
+          /[&<>"]/g,
+          (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
+        );
+      const ld = (k, d) => {
+          try {
+            return JSON.parse(localStorage.getItem(k)) || d;
+          } catch (e) {
+            return d;
+          }
+        },
+        sv = (k, v) => {
+          try {
+            localStorage.setItem(k, JSON.stringify(v));
+          } catch (e) {}
+        };
+      let DB = {
+        vouchers: [],
+        sms: [],
+        prices: [],
+        hh: [],
+        tx: [],
+        ledger: [],
+        payouts: [],
+        merchants: [],
+      };
+      let ME = ld("sp_me", null),
+        tab = "",
+        MD = ld("sp_dev", {
+          queue: [],
+          used: [],
+          offline: false,
+          key: null,
+          cap: 3000,
+          prices: [],
+        }),
+        msg = "";
+      const save = () => {
+          if (ME && ME.role === "admin")
+            api("/api/admin/prices", { prices: DB.prices, cap: DB.cap }).catch(
+              (e) => alert(e.message),
+            );
+        },
+        saveD = () => sv("sp_dev", MD);
+      const online = () => !MD.offline && navigator.onLine;
+      async function sha(s) {
+        return [
+          ...new Uint8Array(
+            await crypto.subtle.digest("SHA-256", enc.encode(s)),
+          ),
+        ]
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+      }
+      async function tag(key, id, val) {
+        const k = await crypto.subtle.importKey(
+          "raw",
+          enc.encode(key),
+          { name: "HMAC", hash: "SHA-256" },
+          false,
+          ["sign"],
+        );
+        const s = new Uint8Array(
+          await crypto.subtle.sign("HMAC", k, enc.encode(id + "|" + val)),
+        );
+        return (
+          [...s.slice(0, 5)].map((b) => B32[b % 32]).join("") + B32[s[5] % 32]
+        );
+      }
+      async function led(ev, d) {
+        const p = DB.ledger.length ? DB.ledger.at(-1).hash : "GENESIS",
+          e = { n: DB.ledger.length, t: Date.now(), ev, d };
+        e.prev = p;
+        e.hash = await sha(p + JSON.stringify([e.n, e.t, ev, d]));
+        DB.ledger.push(e);
+      }
+      const sendSMS = (to, text) => DB.sms.push({ to, text, t: Date.now() });
+      const peso = (n) => "₱" + Number(n).toLocaleString();
+      const logo = `<div class="logo">☂</div><h1>SAKLOLO-PAY</h1><div class="sub">VOUCHER SYSTEM</div>`;
+      function login() {
+        A.innerHTML =
+          logo +
+          `<label>Mobile Number</label><input id=ph inputmode=tel placeholder="09123456789"><label>Password</label><input id=pw type=password placeholder="Enter Here"><button class=big id=go>LOGIN</button><div class=mut style="color:#f7c">${msg}</div><button class=link id=reg>No account? click here to Register</button><div class=foot>🛡 made by Ayleliner & Friends<br>Educational Purpose Test</div>`;
+        $("#go").onclick = () => {
+          const u = DB.users.find(
+            (x) =>
+              x.phone === $("#ph").value.replace(/\s/g, "") &&
+              x.pw === $("#pw").value,
+          );
+          if (!u) {
+            msg = "Invalid number or password";
+            return login();
+          }
+          msg = "";
+          ME = u;
+          sv("sp_me", u);
+          tab = "";
+          if (u.role === "merchant") {
+            MD.key = DB.secret;
+            MD.prices = DB.prices;
+            MD.cap = DB.cap;
+            saveD();
+          }
+          render();
+        };
+        $("#reg").onclick = register;
+      }
+      function register() {
+        A.innerHTML =
+          logo +
+          `<label>Full Name (household representative)</label><input id=n><label>Mobile Number (receives SMS vouchers)</label><input id=ph inputmode=tel placeholder="0912 345 6789 "><label>Barangay</label><input id=b value="Poblacion"><label>Household members</label><input id=m type=number value=4><label>Password</label><input id=pw type=password><button class=big id=go>CREATE ACCOUNT</button><div class=mut style="color:#f7c">${msg}</div><button class=link id=back>Back to Login</button>`;
+        $("#back").onclick = () => {
+          msg = "";
+          login();
+        };
+        $("#go").onclick = async () => {
+          const ph = $("#ph").value.replace(/\s/g, ""),
+            n = $("#n").value.trim();
+          if (!/^09\d{9}$/.test(ph) || !n || $("#pw").value.length < 4) {
+            msg = "Enter name, valid 11-digit number, and password (4+)";
+            return register();
+          }
+          if (DB.users.some((u) => u.phone === ph)) {
+            msg = "Number already registered";
+            return register();
+          }
+          const u = {
+            phone: ph,
+            pw: $("#pw").value,
+            role: "household",
+            name: n,
+            brgy: $("#b").value,
+          };
+          DB.users.push(u);
+          if (!DB.hh.some((h) => h.phone === ph))
+            DB.hh.push({
+              phone: ph,
+              name: n,
+              brgy: u.brgy,
+              members: +$("#m").value,
+            });
+          await led("REGISTER", { phone: await sha(ph) });
+          save();
+          msg = "";
+          ME = u;
+          sv("sp_me", u);
+          render();
+        };
+      }
+      const head = (t) =>
+        `<div class=top><b>☂ ${t}</b><button onclick="out()">Logout</button></div>`;
+      window.out = () => {
+        ME = null;
+        sv("sp_me", null);
+        login();
+      };
+      function tabs(l) {
+        return `<div class=tabs>${l.map((x) => `<button class="${tab === x ? "on" : ""}" onclick="tab='${x}';render()">${x}</button>`).join("")}</div>`;
+      }
+      function render() {
+        if (!ME) return login();
+        ({ household: houseV, admin: adminV, merchant: merchV })[ME.role]();
+      }
+      function houseV() {
+        const v = DB.vouchers.filter((x) => x.phone === ME.phone),
+          m = DB.sms.filter((x) => x.to === ME.phone).reverse();
+        A.innerHTML =
+          head(ME.name) +
+          `<h2>Your Voucher QR</h2>` +
+          (v.length
+            ? v
+                .map(
+                  (x) =>
+                    `<div class=card style="text-align:center"><div id="qr${x.id}"></div><div class=code>${x.code}</div>${peso(x.val)} · <span class="pill ${x.status === "issued" ? "warn" : x.status === "disputed" ? "bad" : "ok"}">${x.status}</span></div>`,
+                )
+                .join("")
+            : "<div class=card>No voucher yet. The LDRRMO will send one by SMS when a disaster is declared.</div>") +
+          `<h2>📱 SMS Inbox <span class=mut>(what a basic GSM phone receives)</span></h2>` +
+          (m
+            .map(
+              (x) =>
+                `<div class=sms>${esc(x.text)}<br><small>${new Date(x.t).toLocaleString()}</small>${x.confirm ? `<div class=row style="margin-top:6px"><button onclick="conf('${x.confirm}',1)">Reply YES</button><button style="background:var(--red);color:#fff" onclick="conf('${x.confirm}',0)">Reply NO</button></div>` : ""}</div>`,
+            )
+            .join("") || "<div class=mut>No messages.</div>");
+        v.forEach((x) => {
+          const q = qrcode(0, "M");
+          q.addData(x.code);
+          q.make();
+          $("#qr" + x.id).innerHTML = q.createSvgTag(5);
+        });
+      }
+      window.conf = async (id, y) => {
+        const v = DB.vouchers.find((x) => x.id === id);
+        if (!v || v.status !== "redeemed") return;
+        v.status = y ? "confirmed" : "disputed";
+        DB.sms.forEach((s) => {
+          if (s.confirm === id) delete s.confirm;
+        });
+        await led(y ? "CONFIRM" : "DISPUTE", { id });
+        save();
+        render();
+      };
+      function adminV() {
+        tab = tab || "Dispatch";
+        let b = "";
+        if (tab === "Dispatch")
+          b = `<div class=card>Voucher value (₱)<input id=val type=number value=500><button class=big style="margin-top:8px" onclick="dispatch()">SEND OTC VOUCHERS TO ALL HOUSEHOLDS WITHOUT ONE</button><div class=mut>${DB.hh.length} households · ${DB.vouchers.length} vouchers issued. Each SMS carries one single-use code signed with HMAC-SHA256.</div></div>${msg}`;
+        if (tab === "Households")
+          b = `<div class=card><b>Pre-register household</b><input id=hn placeholder="Representative name"><input id=hp placeholder="09XXXXXXXXX" style="margin-top:6px"><input id=hb placeholder="Barangay" style="margin-top:6px"><button style="margin-top:8px" onclick="addH()">Add</button></div><div class=tbl><table><tr><th>Name<th>Phone<th>Brgy${DB.hh.map((h) => `<tr><td>${esc(h.name)}<td>${h.phone.slice(0, 4)}***${h.phone.slice(-3)}<td>${esc(h.brgy)}`).join("")}</table></div><div class=mut>Numbers masked on screen. Production: encrypt registry at rest (RA 10173).</div>`;
+        if (tab === "Prices")
+          b =
+            DB.prices
+              .map(
+                (p, i) =>
+                  `<div class="card top"><span>${p.item}</span><span>Max ₱<input style="width:70px;display:inline;padding:6px" type=number value=${p.cap} onchange="DB.prices[${i}].cap=+this.value;save()"></span></div>`,
+              )
+              .join("") +
+            `<div class=card>Per-merchant redemption cap (₱)<input type=number value=${DB.cap} onchange="DB.cap=+this.value;save()"></div><div class=mut>Merchants receive ceilings and cap on next login/sync.</div>`;
+        if (tab === "Tracker") {
+          const g = {};
+          DB.tx.forEach((t) => {
+            const k = t.brgy;
+            g[k] = g[k] || { n: 0, s: 0 };
+            g[k].n++;
+            g[k].s += t.val;
+          });
+          b = `<div class=card>Issued ${peso(DB.vouchers.reduce((a, v) => a + v.val, 0))} · Redeemed ${peso(DB.tx.reduce((a, t) => a + t.val, 0))} · Open ${DB.vouchers.filter((v) => v.status === "issued").length}</div><div class=tbl><table><tr><th>Barangay<th>Redemptions<th>Amount${Object.entries(
+            g,
+          )
+            .map(([k, v]) => `<tr><td>${esc(k)}<td>${v.n}<td>${peso(v.s)}`)
+            .join("")}</table></div><h2>Sent SMS log</h2>${DB.sms
+            .slice(-6)
+            .reverse()
+            .map(
+              (s) =>
+                `<div class=card>→ ${s.to}<br><span class=mut>${esc(s.text)}</span></div>`,
+            )
+            .join("")}`;
+        }
+        if (tab === "Settlement") {
+          const m = {};
+          DB.tx
+            .filter(
+              (t) =>
+                !t.paid &&
+                DB.vouchers.find((v) => v.id === t.vid).status !== "disputed",
+            )
+            .forEach((t) => {
+              m[t.merchant] = (m[t.merchant] || 0) + t.val;
+            });
+          b =
+            Object.entries(m)
+              .map(
+                ([k, v]) =>
+                  `<div class="card top"><span>${esc(k)}</span><b>${peso(v)}</b></div>`,
+              )
+              .join("") || "<div class=card>Nothing pending settlement.</div>";
+          b +=
+            `<button class=big onclick="settle()">GENERATE COA REPORT + 24–48h PAYOUT</button>${msg}<h2>Payout history</h2>` +
+            DB.payouts
+              .map(
+                (p) =>
+                  `<div class=card>${p.merchant}: ${peso(p.amt)} via ${p.ch}<br><span class=mut>ETA ${new Date(p.eta).toLocaleString()} · simulated</span></div>`,
+              )
+              .join("");
+        }
+        if (tab === "Ledger")
+          b =
+            `<button onclick="verify()">Verify chain integrity</button> ${msg}` +
+            DB.ledger
+              .slice(-8)
+              .reverse()
+              .map(
+                (e) =>
+                  `<div class=card>#${e.n} <b>${e.ev}</b><br><span class=mut style="word-break:break-all">${e.hash.slice(0, 32)}…</span></div>`,
+              )
+              .join("");
+        if (tab === "Merchants") b = merchTab();
+        A.innerHTML =
+          head("LDRRMO Dashboard") +
+          tabs([
+            "Dispatch",
+            "Households",
+            "Prices",
+            "Tracker",
+            "Settlement",
+            "Merchants",
+            "Ledger",
+          ]) +
+          b;
+        msg = "";
+      }
+      window.addH = async () => {
+        const p = $("#hp").value.replace(/\s/g, ""),
+          n = $("#hn").value;
+        if (!/^09\d{9}$/.test(p) || !n) return;
+        DB.hh.push({
+          phone: p,
+          name: n,
+          brgy: $("#hb").value || "Poblacion",
+          members: 4,
+        });
+        await led("PREREG", { phone: await sha(p) });
+        save();
+        render();
+      };
+      window.dispatch = async () => {
+        const val = +$("#val").value;
+        let n = 0;
+        for (const h of DB.hh) {
+          if (
+            DB.vouchers.some(
+              (v) => v.phone === h.phone && v.status === "issued",
+            )
+          )
+            continue;
+          const id = rnd(5),
+            code = `SP-${id}-${val}-${await tag(DB.secret, id, val)}`;
+          DB.vouchers.push({
+            id,
+            code,
+            val,
+            phone: h.phone,
+            brgy: h.brgy,
+            status: "issued",
+          });
+          sendSMS(
+            h.phone,
+            `SAKLOLO-PAY: Relief voucher ${peso(val)}. Code: ${code}. Show to any accredited store. One-time use. Do not share.`,
+          );
+          await led("ISSUE", { id, val });
+          n++;
+        }
+        save();
+        msg = `<div class=card>Sent ${n} SMS (simulated gateway; Semaphore API in production).</div>`;
+        render();
+      };
+      window.settle = async () => {
+        const m = {};
+        DB.tx.forEach((t) => {
+          const v = DB.vouchers.find((x) => x.id === t.vid);
+          if (!t.paid && v.status !== "disputed") {
+            m[t.merchant] = (m[t.merchant] || 0) + t.val;
+            t.paid = 1;
+          }
+        });
+        let csv = "ledger_no,voucher,merchant,brgy,amount,time\n";
+        DB.tx.forEach(
+          (t) =>
+            (csv += `${t.n},${t.vid},${t.merchant},${t.brgy},${t.val},${new Date(t.t).toISOString()}\n`),
+        );
+        for (const [k, v] of Object.entries(m)) {
+          const u = DB.users.find((x) => x.name === k);
+          DB.payouts.push({
+            merchant: k,
+            amt: v,
+            ch: u?.wallet || "GCash",
+            eta: Date.now() + 36 * 3600e3,
+          });
+          await led("PAYOUT", { k, v });
+        }
+        save();
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+        a.download = "COA_redemption_report.csv";
+        a.click();
+        msg = `<div class=card>Report downloaded. ${Object.keys(m).length} payout(s) queued.</div>`;
+        render();
+      };
+      window.verify = async () => {
+        let p = "GENESIS",
+          ok = 1;
+        for (const e of DB.ledger) {
+          if (
+            e.prev !== p ||
+            e.hash !== (await sha(p + JSON.stringify([e.n, e.t, e.ev, e.d])))
+          ) {
+            ok = 0;
+            break;
+          }
+          p = e.hash;
+        }
+        msg = ok
+          ? '<span class="pill ok">Chain valid</span>'
+          : '<span class="pill bad">TAMPERED</span>';
+        render();
+      };
+      function merchV() {
+        tab = tab || "Redeem";
+        const on = online();
+        let b = `<div class=net style="background:${on ? "#1d7a4f" : "#a33"}">${on ? "● ONLINE" : "○ OFFLINE"} · ${MD.queue.length} queued <button style="margin-left:8px;padding:4px 8px" onclick="MD.offline=!MD.offline;saveD();if(online())sync();else render()">Simulate ${MD.offline ? "reconnect" : "blackout"}</button></div>`;
+        if (tab === "Redeem")
+          b += `<button style="width:100%;margin-top:10px" onclick="scan()">📷 Scan household QR</button><label>Or type the code from the SMS</label><input id=cd placeholder="SP-XXXXX-500-XXXXXX" style="text-transform:uppercase"><button class=big style="background:var(--gold);color:#222" onclick="redeem()">VALIDATE OFFLINE & ACCEPT</button><div id=res>${msg}</div>`;
+        if (tab === "Queue")
+          b +=
+            MD.queue
+              .map(
+                (q) =>
+                  `<div class=card>${q.code}<br>${peso(q.val)} <span class="pill warn">pending sync</span></div>`,
+              )
+              .join("") || "<div class=card>Queue empty. All synced.</div>";
+        if (tab === "Ceilings")
+          b +=
+            MD.prices
+              .map(
+                (p) =>
+                  `<div class="card top"><span>${p.item}</span><b>max ₱${p.cap}</b></div>`,
+              )
+              .join("") +
+            `<div class=mut>Per-merchant cap: ${peso(MD.cap)}. Cached on this device.</div>`;
+        A.innerHTML = head(ME.name) + tabs(["Redeem", "Queue", "Ceilings"]) + b;
+        msg = "";
+      }
+      window.redeem = async () => {
+        const c = $("#cd").value.trim().toUpperCase(),
+          m = c.match(/^SP-([0-9A-Z]{5})-(\d+)-([0-9A-Z]{6})$/);
+        const r = (t) => {
+          msg = t;
+          merchV();
+        };
+        if (!m)
+          return r(
+            '<div class=card><span class="pill bad">INVALID FORMAT</span></div>',
+          );
+        if ((await tag(MD.key, m[1], m[2])) !== m[3])
+          return r(
+            '<div class=card><span class="pill bad">FORGED / INVALID CODE</span></div>',
+          );
+        if (MD.used.includes(m[1]))
+          return r(
+            '<div class=card><span class="pill bad">ALREADY USED on this device</span></div>',
+          );
+        const tot = MD.used.length
+          ? MD.queue.reduce((a, q) => a + q.val, 0)
+          : 0;
+        if (tot + +m[2] > MD.cap)
+          return r(
+            '<div class=card><span class="pill bad">DAILY MERCHANT CAP REACHED</span></div>',
+          );
+        MD.queue.push({ code: c, id: m[1], val: +m[2], t: Date.now() });
+        MD.used.push(m[1]);
+        saveD();
+        if (online())
+          return sync(
+            `<div class=card><span class="pill ok">VALID</span> ${peso(m[2])} accepted & synced. Hand over goods.</div>`,
+          );
+        r(
+          `<div class=card><span class="pill ok">VALID (offline)</span> ${peso(m[2])} accepted & queued. Hand over goods.</div>`,
+        );
+      };
+      async function sync(m = "") {
+        let bad = 0;
+        for (const q of MD.queue) {
+          const v = DB.vouchers.find((x) => x.id === q.id);
+          if (
+            !v ||
+            v.status !== "issued" ||
+            (await tag(DB.secret, q.id, q.val)) !== q.code.split("-")[3]
+          ) {
+            bad++;
+            await led("REJECT", { id: q.id });
+            continue;
+          }
+          v.status = "redeemed";
+          const n = DB.tx.length;
+          DB.tx.push({
+            n,
+            vid: q.id,
+            val: q.val,
+            merchant: ME.name,
+            brgy: ME.brgy,
+            t: q.t,
+          });
+          sendSMS(
+            v.phone,
+            `SAKLOLO-PAY: ${peso(q.val)} redeemed at ${ME.name}. Reply YES to confirm or NO to dispute.`,
+          );
+          DB.sms.at(-1).confirm = q.id;
+          await led("REDEEM", { id: q.id, m: ME.name });
+        }
+        MD.queue = [];
+        MD.prices = DB.prices;
+        MD.cap = DB.cap;
+        saveD();
+        save();
+        msg =
+          m ||
+          (bad
+            ? `<div class=card><span class="pill bad">${bad} rejected (duplicate)</span></div>`
+            : '<div class=card><span class="pill ok">Synced to server</span></div>');
+        merchV();
+      }
+      addEventListener(
+        "online",
+        () => ME?.role === "merchant" && online() && MD.queue.length && sync(),
+      );
+    </script>
+    <script>
+      const _l = login,
+        _r = register;
+      async function api(p, b) {
+        const o = {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + (localStorage.sp_tok || ""),
+          },
+        };
+        if (b) {
+          o.method = "POST";
+          o.body = JSON.stringify(b);
+        }
+        const r = await fetch(p, o),
+          j = await r.json().catch(() => ({}));
+        if (r.status === 401 && localStorage.sp_tok && !p.includes("login")) {
+          out();
+          throw Error("Session expired");
+        }
+        if (!r.ok) throw Error(j.error || "Error " + r.status);
+        return j;
+      }
+      async function load() {
+        try {
+          DB = await api("/api/state");
+          sv("sp_cache", DB);
+          if (ME.role === "merchant") {
+            MD.key = DB.key;
+            MD.prices = DB.prices;
+            MD.cap = DB.cap;
+            saveD();
+          }
+        } catch (e) {
+          DB = ld("sp_cache", {
+            vouchers: [],
+            sms: [],
+            prices: [],
+            hh: [],
+            tx: [],
+            ledger: [],
+            payouts: [],
+            merchants: [],
+          });
+        }
+      }
+      async function enter(j) {
+        if (j.user.role === "merchant") {
+          if (MD.queue.length && MD.owner && MD.owner !== j.user.id)
+            throw Error("This device has unsynced sales from another store");
+          MD.owner = j.user.id;
+          saveD();
+        }
+        localStorage.sp_tok = j.token;
+        ME = j.user;
+        sv("sp_me", ME);
+        msg = "";
+        tab = "";
+        await load();
+        render();
+      }
+      login = function () {
+        _l();
+        $("#go").onclick = async () => {
+          try {
+            await enter(
+              await api("/api/login", {
+                phone: $("#ph").value.replace(/\s/g, ""),
+                pw: $("#pw").value,
+              }),
+            );
+          } catch (e) {
+            msg = e.message;
+            login();
+          }
+        };
+      };
+      register = function () {
+        _r();
+        $("#go").onclick = async () => {
+          try {
+            const ph = $("#ph").value.replace(/\s/g, ""),
+              pw = $("#pw").value;
+            await api("/api/register", {
+              name: $("#n").value,
+              phone: ph,
+              brgy: $("#b").value,
+              members: $("#m").value,
+              pw,
+            });
+            await enter(await api("/api/login", { phone: ph, pw }));
+          } catch (e) {
+            msg = e.message;
+            register();
+          }
+        };
+      };
+      window.out = () => {
+        ME = null;
+        sv("sp_me", null);
+        localStorage.removeItem("sp_tok");
+        localStorage.removeItem("sp_cache");
+        login();
+      };
+      const act =
+        (f) =>
+        async (...a) => {
+          try {
+            await f(...a);
+          } catch (e) {
+            alert(e.message);
+          }
+        };
+      window.addH = act(async () => {
+        await api("/api/admin/households", {
+          name: $("#hn").value,
+          phone: $("#hp").value.replace(/\s/g, ""),
+          brgy: $("#hb").value,
+        });
+        await load();
+        render();
+      });
+      window.addM = act(async () => {
+        await api("/api/admin/merchants", {
+          name: $("#mn").value,
+          phone: $("#mp").value.replace(/\s/g, ""),
+          brgy: $("#mb").value,
+          wallet: $("#mw").value,
+          pw: $("#mpw").value,
+        });
+        await load();
+        render();
+      });
+      window.dispatch = act(async () => {
+        const j = await api("/api/admin/dispatch", { val: +$("#val").value });
+        await load();
+        msg = `<div class=card>Queued ${j.n} SMS (${j.mode === "live" ? "sent via Semaphore" : "dry-run, not sent"}).</div>`;
+        render();
+      });
+      window.settle = act(async () => {
+        const j = await api("/api/admin/settle", {}),
+          a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([j.csv], { type: "text/csv" }));
+        a.download = "COA_redemption_report.csv";
+        a.click();
+        await load();
+        msg = `<div class=card>Report downloaded. ${j.payouts} payout(s) queued.</div>`;
+        render();
+      });
+      window.verify = act(async () => {
+        const j = await api("/api/admin/verify");
+        msg = j.ok
+          ? '<span class="pill ok">Chain valid</span>'
+          : `<span class="pill bad">TAMPERED at #${j.at}</span>`;
+        render();
+      });
+      window.conf = act(async (id, y) => {
+        await api("/api/confirm", { id, yes: y });
+        await load();
+        render();
+      });
+      const merchTab = () =>
+        `<div class=card><b>Accredit merchant</b><input id=mn placeholder="Store name"><input id=mp placeholder="09XXXXXXXXX" style="margin-top:6px"><input id=mb placeholder="Barangay" style="margin-top:6px"><select id=mw style="margin-top:6px"><option>GCash<option>Maya<option>Bank</select><input id=mpw placeholder="Temporary password (6+)" style="margin-top:6px"><button style="margin-top:8px" onclick="addM()">Accredit</button></div>` +
+        (DB.merchants || [])
+          .map(
+            (m) =>
+              `<div class="card top"><span>${esc(m.name)}</span><span class=mut>${esc(m.brgy)} · ${m.wallet}</span></div>`,
+          )
+          .join("");
+      async function sync(m = "") {
+        let bad = [];
+        try {
+          const j = await api("/api/sync", {
+            queue: MD.queue.map((q) => ({ code: q.code })),
+          });
+          bad = j.results.filter((x) => x.why);
+          MD.queue = [];
+          saveD();
+          await load();
+          msg = bad.length
+            ? `<div class=card><span class="pill bad">Rejected: ${bad.map((x) => x.why).join(", ")}</span></div>`
+            : m ||
+              '<div class=card><span class="pill ok">Synced to server</span></div>';
+        } catch (e) {
+          msg = m
+            ? m.replace("accepted & synced", "accepted & queued")
+            : "<div class=card>Sync failed. Will retry when online.</div>";
+        }
+        merchV();
+      }
+      window.scan = async () => {
+        const o = document.createElement("div");
+        o.style.cssText =
+          "position:fixed;inset:0;background:#000;z-index:9;display:grid;place-items:center";
+        o.innerHTML =
+          '<video playsinline muted style="width:100%;max-height:80vh"></video><button style="position:fixed;bottom:28px">Close</button>';
+        document.body.append(o);
+        const v = o.querySelector("video");
+        let on = 1;
+        const stop = () => {
+          on = 0;
+          v.srcObject && v.srcObject.getTracks().forEach((t) => t.stop());
+          o.remove();
+        };
+        o.querySelector("button").onclick = stop;
+        try {
+          v.srcObject = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+          });
+          await v.play();
+        } catch (e) {
+          stop();
+          return alert(
+            "Camera needs HTTPS and permission. You can type the code instead.",
+          );
+        }
+        const cv = document.createElement("canvas"),
+          x = cv.getContext("2d", { willReadFrequently: true });
+        (function f() {
+          if (!on) return;
+          if (v.videoWidth) {
+            cv.width = v.videoWidth;
+            cv.height = v.videoHeight;
+            x.drawImage(v, 0, 0);
+            const d = x.getImageData(0, 0, cv.width, cv.height),
+              k = jsQR(d.data, d.width, d.height);
+            if (k && /^SP-/.test(k.data)) {
+              stop();
+              $("#cd").value = k.data;
+              redeem();
+              return;
+            }
+          }
+          requestAnimationFrame(f);
+        })();
+      };
+      if ("serviceWorker" in navigator)
+        navigator.serviceWorker.register("/sw.js");
+      (async () => {
+        if (ME && !localStorage.sp_tok) ME = null;
+        if (ME) await load();
+        render();
+      })();
+    </script>
+  </body>
+</html>
