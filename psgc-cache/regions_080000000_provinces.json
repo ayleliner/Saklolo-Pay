@@ -1,0 +1,44 @@
+[
+  {
+    "code": "082600000",
+    "name": "Eastern Samar",
+    "regionCode": "080000000",
+    "islandGroupCode": "visayas",
+    "psgc10DigitCode": "0802600000"
+  },
+  {
+    "code": "083700000",
+    "name": "Leyte",
+    "regionCode": "080000000",
+    "islandGroupCode": "visayas",
+    "psgc10DigitCode": "0803700000"
+  },
+  {
+    "code": "084800000",
+    "name": "Northern Samar",
+    "regionCode": "080000000",
+    "islandGroupCode": "visayas",
+    "psgc10DigitCode": "0804800000"
+  },
+  {
+    "code": "086000000",
+    "name": "Samar",
+    "regionCode": "080000000",
+    "islandGroupCode": "visayas",
+    "psgc10DigitCode": "0806000000"
+  },
+  {
+    "code": "086400000",
+    "name": "Southern Leyte",
+    "regionCode": "080000000",
+    "islandGroupCode": "visayas",
+    "psgc10DigitCode": "0806400000"
+  },
+  {
+    "code": "087800000",
+    "name": "Biliran",
+    "regionCode": "080000000",
+    "islandGroupCode": "visayas",
+    "psgc10DigitCode": "0807800000"
+  }
+]

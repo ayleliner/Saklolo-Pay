@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Saklolo-Pay (Node.js + MySQL + installable phone PWA)
 1. Install Node 18+ and MySQL 8 (or MariaDB 10.6+). `mysql -u root -p < schema.sql`, then create a DB user with rights on `saklolo`.
 2. `cp .env.example .env` and fill in DB credentials plus the three secrets. Set ADMIN_PHONE / ADMIN_PASSWORD.
@@ -9,7 +8,7 @@
 **SMS:** `SMS_MODE=dry` only logs messages. For real sending set `SMS_MODE=live`, `SEMAPHORE_API_KEY` (and an approved `SEMAPHORE_SENDER`). YES/NO replies work in-app; for replies by SMS, configure your gateway's inbound webhook to `POST /api/sms/inbound?token=INBOUND_TOKEN`.
 **Offline:** merchants open the app once online (it caches the shell, ceilings and verification key). After that they can validate and queue sales with no signal; the queue syncs on reconnect.
 **Not included yet:** real payout API (stub in `/api/admin/settle`), phone-ownership OTP at registration, per-merchant keys/key rotation, tightened CSP.
-=======
-# Saklolo-Pay
-decentralized app for residents basta
->>>>>>> 622e82e08c2c465b5eb44dd735322436b71d3da0
+
+**v2:** new tables (inventory, violations) and user columns are created automatically at startup. Merchants can sync by SMS ("RDM <codes>") only if your SMS provider forwards inbound texts to `/api/sms/inbound` and `SMS_GATEWAY_NUMBER` is set.
+
+**Address lists:** Region > City/Municipality > Barangay come from the public PSGC API (psgc.gitlab.io). The server fetches each list once and caches it in `psgc-cache/`; if the lists cannot load, the form falls back to typed fields.

@@ -233,7 +233,56 @@
           --bg: #0b3a5c;
         }
       }
-      /*splash*/
+      #app {
+        padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+      }
+      .tabs {
+        position: fixed;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 480px;
+        margin: 0;
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+        background: #082b45;
+        border-top: 1px solid #2b6288;
+        z-index: 5;
+      }
+      .tabs button {
+        min-height: 44px;
+        padding: 10px 14px;
+      }
+      button {
+        min-height: 44px;
+        touch-action: manipulation;
+      }
+      input,
+      select {
+        font-size: 16px;
+      }
+      .row > * {
+        min-width: 0;
+      }
+      .btn {
+        display: block;
+        text-align: center;
+        text-decoration: none;
+        background: var(--gold);
+        color: #222;
+        padding: 13px;
+        border-radius: 8px;
+        font-weight: 700;
+        margin-top: 8px;
+      }
+      #inst {
+        position: fixed;
+        right: 12px;
+        top: calc(10px + env(safe-area-inset-top, 0px));
+        z-index: 6;
+        min-height: 36px;
+        padding: 6px 12px;
+      } /*splash*/
       #splash {
         position: fixed;
         inset: 0;
@@ -417,7 +466,7 @@
       <div class="sp-t">SAKLOLO-PAY</div>
       <div class="sp-s">VOUCHER SYSTEM</div>
       <div class="sp-bar"><i></i></div>
-      <div class="sp-f">made by Ayleliner & Friends</div>
+      <div class="sp-f">made by Ayle & Friends</div>
     </div>
     <script>
       (() => {
@@ -539,7 +588,7 @@
       function login() {
         A.innerHTML =
           logo +
-          `<label>Mobile Number</label><input id=ph inputmode=tel placeholder="09123456789"><label>Password</label><input id=pw type=password placeholder="Enter Here"><button class=big id=go>LOGIN</button><div class=mut style="color:#f7c">${msg}</div><button class=link id=reg>No account? click here to Register</button><div class=foot>🛡 made by Ayleliner & Friends<br>Educational Purpose Test</div>`;
+          `<label>Mobile Number</label><input id=ph inputmode=tel placeholder="09XX XXX XXXX"><label>Password</label><input id=pw type=password placeholder="Enter here"><button class=big id=go>LOGIN</button><div class=mut style="color:#f7c">${msg}</div><button class=link id=reg>No account? click here to Register</button><div class=foot>🛡 made by Ayle & Friends<br>Educational Test Web-App</div>`;
         $("#go").onclick = () => {
           const u = DB.users.find(
             (x) =>
@@ -567,7 +616,7 @@
       function register() {
         A.innerHTML =
           logo +
-          `<label>Full Name (household representative)</label><input id=n><label>Mobile Number (receives SMS vouchers)</label><input id=ph inputmode=tel placeholder="0912 345 6789 "><label>Barangay</label><input id=b value="Poblacion"><label>Household members</label><input id=m type=number value=4><label>Password</label><input id=pw type=password><button class=big id=go>CREATE ACCOUNT</button><div class=mut style="color:#f7c">${msg}</div><button class=link id=back>Back to Login</button>`;
+          `<label>Full Name (household representative)</label><input id=n><label>Mobile Number (receives SMS vouchers)</label><input id=ph inputmode=tel placeholder="09XXXXXXXXX"><label>Barangay</label><input id=b value="Poblacion"><label>Household members</label><input id=m type=number value=4><label>Password</label><input id=pw type=password><button class=big id=go>CREATE ACCOUNT</button><div class=mut style="color:#f7c">${msg}</div><button class=link id=back>Back to Login</button>`;
         $("#back").onclick = () => {
           msg = "";
           login();
@@ -665,7 +714,7 @@
         if (tab === "Dispatch")
           b = `<div class=card>Voucher value (₱)<input id=val type=number value=500><button class=big style="margin-top:8px" onclick="dispatch()">SEND OTC VOUCHERS TO ALL HOUSEHOLDS WITHOUT ONE</button><div class=mut>${DB.hh.length} households · ${DB.vouchers.length} vouchers issued. Each SMS carries one single-use code signed with HMAC-SHA256.</div></div>${msg}`;
         if (tab === "Households")
-          b = `<div class=card><b>Pre-register household</b><input id=hn placeholder="Representative name"><input id=hp placeholder="09XXXXXXXXX" style="margin-top:6px"><input id=hb placeholder="Barangay" style="margin-top:6px"><button style="margin-top:8px" onclick="addH()">Add</button></div><div class=tbl><table><tr><th>Name<th>Phone<th>Brgy${DB.hh.map((h) => `<tr><td>${esc(h.name)}<td>${h.phone.slice(0, 4)}***${h.phone.slice(-3)}<td>${esc(h.brgy)}`).join("")}</table></div><div class=mut>Numbers masked on screen. Production: encrypt registry at rest (RA 10173).</div>`;
+          b = `<div class=card><b>Pre-register household</b><input id=hn placeholder="Representative name"><input id=hp placeholder="09XXXXXXXXX" style="margin-top:6px">${pick("hb")}<button style="margin-top:8px" onclick="addH()">Add</button></div><div class=tbl><table><tr><th>Name<th>Phone<th>Brgy${DB.hh.map((h) => `<tr><td>${esc(h.name)}<td>${h.phone.slice(0, 4)}***${h.phone.slice(-3)}<td>${esc(h.brgy)}`).join("")}</table></div><div class=mut>Numbers masked on screen. Production: encrypt registry at rest (RA 10173).</div>`;
         if (tab === "Prices")
           b =
             DB.prices
@@ -683,7 +732,7 @@
             g[k].n++;
             g[k].s += t.val;
           });
-          b = `<div class=card>Issued ${peso(DB.vouchers.reduce((a, v) => a + v.val, 0))} · Redeemed ${peso(DB.tx.reduce((a, t) => a + t.val, 0))} · Open ${DB.vouchers.filter((v) => v.status === "issued").length}</div><div class=tbl><table><tr><th>Barangay<th>Redemptions<th>Amount${Object.entries(
+          b = `<div class=card>Issued ${peso(DB.vouchers.reduce((a, v) => a + v.val, 0))} · Redeemed ${peso(DB.tx.reduce((a, t) => a + t.val, 0))} · Open ${DB.vouchers.filter((v) => v.status === "issued").length}<br>Redeemed outside home barangay: ${DB.tx.filter((t) => t.home && t.home !== t.brgy).length}</div><div class=tbl><table><tr><th>Barangay<th>Redemptions<th>Amount${Object.entries(
             g,
           )
             .map(([k, v]) => `<tr><td>${esc(k)}<td>${v.n}<td>${peso(v.s)}`)
@@ -725,7 +774,7 @@
         }
         if (tab === "Ledger")
           b =
-            `<button onclick="verify()">Verify chain integrity</button> ${msg}` +
+            `<button onclick="verify()">Verify chain integrity</button> ${msg}<div class=card style="margin-top:8px"><b>Track a voucher</b><input id=tk placeholder="Voucher code or ID"><button style="margin-top:6px" onclick="track()">Track</button><div id=tr></div></div>` +
             DB.ledger
               .slice(-8)
               .reverse()
@@ -735,12 +784,16 @@
               )
               .join("");
         if (tab === "Merchants") b = merchTab();
+        if (tab === "Engine") b = engineTab();
+        if (tab === "Stock") b = stockAdmin();
         A.innerHTML =
           head("LDRRMO Dashboard") +
           tabs([
             "Dispatch",
             "Households",
             "Prices",
+            "Engine",
+            "Stock",
             "Tracker",
             "Settlement",
             "Merchants",
@@ -867,7 +920,9 @@
               )
               .join("") +
             `<div class=mut>Per-merchant cap: ${peso(MD.cap)}. Cached on this device.</div>`;
-        A.innerHTML = head(ME.name) + tabs(["Redeem", "Queue", "Ceilings"]) + b;
+        if (tab === "Stock") b += stockTab();
+        A.innerHTML =
+          head(ME.name) + tabs(["Redeem", "Queue", "Stock", "Ceilings"]) + b;
         msg = "";
       }
       window.redeem = async () => {
@@ -1116,7 +1171,7 @@
         render();
       });
       const merchTab = () =>
-        `<div class=card><b>Accredit merchant</b><input id=mn placeholder="Store name"><input id=mp placeholder="09XXXXXXXXX" style="margin-top:6px"><input id=mb placeholder="Barangay" style="margin-top:6px"><select id=mw style="margin-top:6px"><option>GCash<option>Maya<option>Bank</select><input id=mpw placeholder="Temporary password (6+)" style="margin-top:6px"><button style="margin-top:8px" onclick="addM()">Accredit</button></div>` +
+        `<div class=card><b>Accredit merchant</b><input id=mn placeholder="Store name"><input id=mp placeholder="09XXXXXXXXX" style="margin-top:6px">${pick("mb")}<select id=mw style="margin-top:6px"><option>GCash<option>Maya<option>Bank</select><input id=mpw placeholder="Temporary password (6+)" style="margin-top:6px"><button style="margin-top:8px" onclick="addM()">Accredit</button></div>` +
         (DB.merchants || [])
           .map(
             (m) =>
@@ -1198,5 +1253,6 @@
         render();
       })();
     </script>
+    <script src="/v2.js"></script>
   </body>
 </html>
