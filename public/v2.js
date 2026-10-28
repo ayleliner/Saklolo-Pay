@@ -1,53 +1,335 @@
 // Saklolo-Pay v2: Geo-flexible stores, SMS fallback, inventory tracker, price-ceiling engine, voucher tracking, mobile touches
-let GPS=null,ip;
-const km=(a,b)=>{const t=x=>x*Math.PI/180,h=Math.sin(t(b.lat-a.lat)/2)**2+Math.cos(t(a.lat))*Math.cos(t(b.lat))*Math.sin(t(b.lng-a.lng)/2)**2;return 12742*Math.asin(Math.sqrt(h))};
-function storesV(){const L=(DB.stores||[]).map(s=>({...s,d:GPS&&s.lat!=null?km(GPS,s):null})).sort((a,b)=>(a.d??1e9)-(b.d??1e9));
- A.innerHTML=head(ME.name)+`<h2>Stores that accept your voucher</h2><div class=mut>Any accredited store works, even outside your barangay.</div><button style="width:100%;margin:10px 0" onclick="locate()">📍 Sort by distance from me</button>`+(L.map(s=>`<div class=card><b>${esc(s.name)}</b> <span class=mut>${esc(s.brgy||'')}${s.d!=null?' · '+s.d.toFixed(1)+' km':''}</span><br>${s.stock.map(i=>`${esc(i.item)} ×${i.qty} (₱${i.price})`).join(' · ')||'<span class=mut>No stock listed</span>'}</div>`).join('')||'<div class=card>No stores yet.</div>')+tabs(['Voucher','Stores'])}
-window.locate=()=>navigator.geolocation.getCurrentPosition(p=>{GPS={lat:p.coords.latitude,lng:p.coords.longitude};render()},()=>alert('Allow location access to sort by distance'));
-const _hv=houseV;houseV=function(){tab=tab||'Voucher';if(tab==='Stores')return storesV();_hv();A.insertAdjacentHTML('beforeend',tabs(['Voucher','Stores']))};
+let GPS = null,
+  ip;
+const km = (a, b) => {
+  const t = (x) => (x * Math.PI) / 180,
+    h =
+      Math.sin(t(b.lat - a.lat) / 2) ** 2 +
+      Math.cos(t(a.lat)) *
+        Math.cos(t(b.lat)) *
+        Math.sin(t(b.lng - a.lng) / 2) ** 2;
+  return 12742 * Math.asin(Math.sqrt(h));
+};
+function storesV() {
+  const L = (DB.stores || [])
+    .map((s) => ({ ...s, d: GPS && s.lat != null ? km(GPS, s) : null }))
+    .sort((a, b) => (a.d ?? 1e9) - (b.d ?? 1e9));
+  A.innerHTML =
+    head(ME.name) +
+    `<h2>Stores that accept your voucher</h2><div class=mut>Any accredited store works, even outside your barangay.</div><button style="width:100%;margin:10px 0" onclick="locate()">📍 Sort by distance from me</button>` +
+    (L.map(
+      (s) =>
+        `<div class=card><b>${esc(s.name)}</b> <span class=mut>${esc(s.brgy || "")}${s.d != null ? " · " + s.d.toFixed(1) + " km" : ""}</span><br>${s.stock.map((i) => `${esc(i.item)} ×${i.qty} (₱${i.price})`).join(" · ") || "<span class=mut>No stock listed</span>"}</div>`,
+    ).join("") || "<div class=card>No stores yet.</div>") +
+    tabs(["Voucher", "Stores"]);
+}
+window.locate = () =>
+  navigator.geolocation.getCurrentPosition(
+    (p) => {
+      GPS = { lat: p.coords.latitude, lng: p.coords.longitude };
+      render();
+    },
+    () => alert("Allow location access to sort by distance"),
+  );
+const _hv = houseV;
+houseV = function () {
+  tab = tab || "Voucher";
+  if (tab === "Stores") return storesV();
+  _hv();
+  A.insertAdjacentHTML("beforeend", tabs(["Voucher", "Stores"]));
+};
 // merchant: stock + prices (checked against ceilings while a State of Calamity is on), location, SMS sync
-const cz=()=>DB.calamity||MD.cz||{};
-const stockTab=()=>{const inv=Object.fromEntries((MD.inv||[]).map(i=>[i.item,i]));
- return `<div class=mut style="margin:10px 0">${cz().on?'⚠ State of Calamity ('+esc(cz().hz||'')+'): prices above the ceiling are blocked.':'Ceilings are enforced once a State of Calamity is declared.'}</div>`+(MD.prices||[]).map((p,i)=>`<div class=card><b>${esc(p.item)}</b> <span class=mut>ceiling ₱${p.cap}</span><div class=row style="margin-top:6px"><input id=q${i} type=number inputmode=numeric min=0 placeholder="Stock" value="${inv[p.item]?inv[p.item].qty:''}"><input id=p${i} type=number inputmode=decimal step=0.01 min=0 placeholder="My price ₱" value="${inv[p.item]?inv[p.item].price:''}"></div></div>`).join('')+`<button class=big style="background:var(--gold);color:#222" onclick="saveStock()">SAVE STOCK & PRICES</button><button style="width:100%;margin-top:10px" onclick="setLoc()">📍 ${DB.me&&DB.me.lat!=null?'Update':'Set'} my store location</button>${msg}`};
-window.saveStock=()=>{const items=[],over=[];(MD.prices||[]).forEach((p,i)=>{const q=$('#q'+i).value,pr=$('#p'+i).value;if(q===''&&pr==='')return;items.push({item:p.item,qty:+q||0,price:+pr||0});if(cz().on&&+pr>p.cap)over.push(p.item)});
- if(over.length){msg=`<div class=card><span class="pill bad">Over ceiling: ${esc(over.join(', '))}</span></div>`;return merchV()}
- MD.inv=items;MD.invDirty=1;saveD();msg='<div class=card><span class="pill ok">Saved on this phone</span></div>';(online()?pushInv():Promise.resolve()).then(()=>merchV())};
-async function pushInv(){if(!MD.invDirty)return;try{const j=await api('/api/inventory',{items:MD.inv});MD.invDirty=0;saveD();await load();msg=`<div class=card><span class="pill ${j.flagged.length?'bad':'ok'}">${j.flagged.length?'Flagged to LDRRMO: '+esc(j.flagged.join(', ')):'Stock synced'}</span></div>`}catch(e){}}
-window.setLoc=()=>navigator.geolocation.getCurrentPosition(async p=>{try{await api('/api/location',{lat:p.coords.latitude,lng:p.coords.longitude});await load();msg='<div class=card><span class="pill ok">Location saved</span></div>'}catch(e){msg='<div class=card>Needs internet to save location</div>'}merchV()},()=>alert('Allow location access'));
-const smsBtn=()=>{const g=MD.gw;if(!g)return'';const k=MD.queue.map(q=>q.code),ch=[];for(let i=0;i<k.length;i+=5)ch.push(k.slice(i,i+5));
- return `<div class=card><b>No mobile data?</b><div class=mut>Send queued sales by plain SMS. The server redeems them and texts you back.</div>${ch.map((c,i)=>`<a class=btn href="sms:${g}?body=${encodeURIComponent('RDM '+c.join(' '))}">✉️ Send SMS ${i+1}/${ch.length} (${c.length} codes)</a>`).join('')}</div>`};
-const _mv=merchV;merchV=function(){_mv();if(tab==='Queue'&&MD.queue.length)A.insertAdjacentHTML('beforeend',smsBtn())};
-const _sy=sync;sync=async function(m){await pushInv();return _sy(m)};
-const _rd=render;render=function(){if(ME&&ME.role==='merchant'&&DB.key){MD.cz=DB.calamity;MD.gw=DB.gw;if(DB.inv&&!MD.invDirty)MD.inv=DB.inv;saveD()}_rd();document.querySelectorAll('select[id$="_r"]').forEach(s=>initPick(s.id.slice(0,-2)))};
+const cz = () => DB.calamity || MD.cz || {};
+const stockTab = () => {
+  const inv = Object.fromEntries((MD.inv || []).map((i) => [i.item, i]));
+  return (
+    `<div class=mut style="margin:10px 0">${cz().on ? "⚠ State of Calamity (" + esc(cz().hz || "") + "): prices above the ceiling are blocked." : "Ceilings are enforced once a State of Calamity is declared."}</div>` +
+    (MD.prices || [])
+      .map(
+        (p, i) =>
+          `<div class=card><b>${esc(p.item)}</b> <span class=mut>ceiling ₱${p.cap}</span><div class=row style="margin-top:6px"><input id=q${i} type=number inputmode=numeric min=0 placeholder="Stock" value="${inv[p.item] ? inv[p.item].qty : ""}"><input id=p${i} type=number inputmode=decimal step=0.01 min=0 placeholder="My price ₱" value="${inv[p.item] ? inv[p.item].price : ""}"></div></div>`,
+      )
+      .join("") +
+    `<button class=big style="background:var(--gold);color:#222" onclick="saveStock()">SAVE STOCK & PRICES</button><button style="width:100%;margin-top:10px" onclick="setLoc()">📍 ${DB.me && DB.me.lat != null ? "Update" : "Set"} my store location</button>${msg}`
+  );
+};
+window.saveStock = () => {
+  const items = [],
+    over = [];
+  (MD.prices || []).forEach((p, i) => {
+    const q = $("#q" + i).value,
+      pr = $("#p" + i).value;
+    if (q === "" && pr === "") return;
+    items.push({ item: p.item, qty: +q || 0, price: +pr || 0 });
+    if (cz().on && +pr > p.cap) over.push(p.item);
+  });
+  if (over.length) {
+    msg = `<div class=card><span class="pill bad">Over ceiling: ${esc(over.join(", "))}</span></div>`;
+    return merchV();
+  }
+  MD.inv = items;
+  MD.invDirty = 1;
+  saveD();
+  msg =
+    '<div class=card><span class="pill ok">Saved on this phone</span></div>';
+  (online() ? pushInv() : Promise.resolve()).then(() => merchV());
+};
+async function pushInv() {
+  if (!MD.invDirty) return;
+  try {
+    const j = await api("/api/inventory", { items: MD.inv });
+    MD.invDirty = 0;
+    saveD();
+    await load();
+    msg = `<div class=card><span class="pill ${j.flagged.length ? "bad" : "ok"}">${j.flagged.length ? "Flagged to LDRRMO: " + esc(j.flagged.join(", ")) : "Stock synced"}</span></div>`;
+  } catch (e) {}
+}
+window.setLoc = () =>
+  navigator.geolocation.getCurrentPosition(
+    async (p) => {
+      try {
+        await api("/api/location", {
+          lat: p.coords.latitude,
+          lng: p.coords.longitude,
+        });
+        await load();
+        msg =
+          '<div class=card><span class="pill ok">Location saved</span></div>';
+      } catch (e) {
+        msg = "<div class=card>Needs internet to save location</div>";
+      }
+      merchV();
+    },
+    () => alert("Allow location access"),
+  );
+const smsBtn = () => {
+  const g = MD.gw;
+  if (!g) return "";
+  const k = MD.queue.map((q) => q.code),
+    ch = [];
+  for (let i = 0; i < k.length; i += 5) ch.push(k.slice(i, i + 5));
+  return `<div class=card><b>No mobile data?</b><div class=mut>Send queued sales by plain SMS. The server redeems them and texts you back.</div>${ch.map((c, i) => `<a class=btn href="sms:${g}?body=${encodeURIComponent("RDM " + c.join(" "))}">✉️ Send SMS ${i + 1}/${ch.length} (${c.length} codes)</a>`).join("")}</div>`;
+};
+const _mv = merchV;
+merchV = function () {
+  _mv();
+  if (tab === "Queue" && MD.queue.length)
+    A.insertAdjacentHTML("beforeend", smsBtn());
+};
+const _sy = sync;
+sync = async function (m) {
+  await pushInv();
+  return _sy(m);
+};
+const _rd = render;
+render = function () {
+  if (ME && ME.role === "merchant" && DB.key) {
+    MD.cz = DB.calamity;
+    MD.gw = DB.gw;
+    if (DB.inv && !MD.invDirty) MD.inv = DB.inv;
+    saveD();
+  }
+  _rd();
+  document
+    .querySelectorAll('select[id$="_r"]')
+    .forEach((s) => initPick(s.id.slice(0, -2)));
+};
 // admin: calamity switch + violations, barangay stock, voucher tracking
-const engineTab=()=>{const z=DB.calamity||{};return `<div class=card><b>State of Calamity</b><div class=mut>Price ceilings are enforced only while this is ON.</div><select id=hz style="margin-top:8px"><option>Typhoon<option>Flood<option>Landslide<option>Earthquake</select><button class=big style="background:${z.on?'var(--ok)':'var(--red)'}" onclick="calamity(${z.on?0:1})">${z.on?'● ACTIVE ('+esc(z.hz||'')+') · TAP TO LIFT':'DECLARE STATE OF CALAMITY'}</button></div><h2>Price violations</h2>`+((DB.viol||[]).map(v=>`<div class=card><b>${esc(v.name)}</b> ${v.suspended?'<span class="pill bad">suspended</span>':''}<br>${esc(v.item)}: ₱${v.price} (ceiling ₱${v.ceiling})<br><button style="margin-top:6px" onclick="susp(${v.mid},${v.suspended?0:1})">${v.suspended?'Reinstate store':'Suspend store'}</button></div>`).join('')||'<div class=card>No open violations.</div>')};
-const stockAdmin=()=>`<div class=tbl><table><tr><th>Barangay<th>Item<th>Units<th>Stores${(DB.stock||[]).map(s=>`<tr><td>${esc(s.brgy||'')}<td>${esc(s.item)}<td style="color:${s.qty<20?'#ff8a8a':'inherit'}">${s.qty}<td>${s.stores}`).join('')}</table></div><div class=mut>Red = fewer than 20 units across that barangay's stores.</div>`;
-window.calamity=act(async on=>{await api('/api/admin/calamity',{on,hz:$('#hz').value});await load();render()});
-window.susp=act(async(id,on)=>{await api('/api/admin/suspend',{id,on});await load();render()});
-window.track=act(async()=>{const r=await api('/api/admin/track?id='+encodeURIComponent($('#tk').value));$('#tr').innerHTML=r.map(e=>`<div class=mut>#${e.n} <b>${e.ev}</b> · ${new Date(e.t).toLocaleString()}</div>`).join('')||'<div class=mut>No events found.</div>'});
+const engineTab = () => {
+  const z = DB.calamity || {};
+  return (
+    `<div class=card><b>State of Calamity</b><div class=mut>Price ceilings are enforced only while this is ON.</div><select id=hz style="margin-top:8px"><option>Typhoon<option>Flood<option>Landslide<option>Earthquake</select><button class=big style="background:${z.on ? "var(--ok)" : "var(--red)"}" onclick="calamity(${z.on ? 0 : 1})">${z.on ? "● ACTIVE (" + esc(z.hz || "") + ") · TAP TO LIFT" : "DECLARE STATE OF CALAMITY"}</button></div><h2>Price violations</h2>` +
+    ((DB.viol || [])
+      .map(
+        (v) =>
+          `<div class=card><b>${esc(v.name)}</b> ${v.suspended ? '<span class="pill bad">suspended</span>' : ""}<br>${esc(v.item)}: ₱${v.price} (ceiling ₱${v.ceiling})<br><button style="margin-top:6px" onclick="susp(${v.mid},${v.suspended ? 0 : 1})">${v.suspended ? "Reinstate store" : "Suspend store"}</button></div>`,
+      )
+      .join("") || "<div class=card>No open violations.</div>")
+  );
+};
+const stockAdmin = () =>
+  `<div class=tbl><table><tr><th>Barangay<th>Item<th>Units<th>Stores${(DB.stock || []).map((s) => `<tr><td>${esc(s.brgy || "")}<td>${esc(s.item)}<td style="color:${s.qty < 20 ? "#ff8a8a" : "inherit"}">${s.qty}<td>${s.stores}`).join("")}</table></div><div class=mut>Red = fewer than 20 units across that barangay's stores.</div>`;
+window.calamity = act(async (on) => {
+  await api("/api/admin/calamity", { on, hz: $("#hz").value });
+  await load();
+  render();
+});
+window.susp = act(async (id, on) => {
+  await api("/api/admin/suspend", { id, on });
+  await load();
+  render();
+});
+window.track = act(async () => {
+  const r = await api(
+    "/api/admin/track?id=" + encodeURIComponent($("#tk").value),
+  );
+  $("#tr").innerHTML =
+    r
+      .map(
+        (e) =>
+          `<div class=mut>#${e.n} <b>${e.ev}</b> · ${new Date(e.t).toLocaleString()}</div>`,
+      )
+      .join("") || "<div class=mut>No events found.</div>";
+});
 // install button (Android/Chrome)
-addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;if(!$('#inst')){document.body.insertAdjacentHTML('beforeend','<button id=inst>⬇ Install app</button>');$('#inst').onclick=async()=>{ip.prompt();await ip.userChoice;$('#inst').remove()}}});
+addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  ip = e;
+  if (!$("#inst")) {
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      "<button id=inst>⬇ Install app</button>",
+    );
+    $("#inst").onclick = async () => {
+      ip.prompt();
+      await ip.userChoice;
+      $("#inst").remove();
+    };
+  }
+});
 // Formal registration: Region > City/Municipality > Barangay (lists come from /api/psgc)
-const pgc={},pg=p=>pgc[p]?Promise.resolve(pgc[p]):fetch('/api/psgc?p='+p).then(r=>r.ok?r.json():Promise.reject()).then(d=>pgc[p]=d);
-const sel=(id,k)=>$('#'+id+'_'+k),opt=(s,t)=>{s.innerHTML=`<option value="">${t}</option>`;s.disabled=true};
-function pick(id){return `<label>Region *</label><select id=${id}_r onchange="pk('${id}','r')"><option value="">Select region</option></select><label>City / Municipality *</label><select id=${id}_m onchange="pk('${id}','m')" disabled><option value="">Select region first</option></select><label>Barangay *</label><select id=${id}_b onchange="pk('${id}','b')" disabled><option value="">Select city / municipality first</option></select><input type=hidden id=${id}>`}
-async function initPick(id){try{const rg=await pg('regions');sel(id,'r').innerHTML='<option value="">Select region</option>'+rg.map(r=>`<option value="${r.code}">${esc((r.regionName?r.regionName+' – ':'')+r.name)}</option>`).join('')}
- catch(e){['Region','City / Municipality','Barangay'].forEach((t,i)=>{const s=sel(id,'rmb'[i]);if(s)s.outerHTML=`<input id=${id}_${'rmb'[i]} placeholder="${t}" oninput="pm('${id}')">`})}}
-window.pm=id=>{const b=sel(id,'b').value.trim();$('#'+id).value=b?b+', '+sel(id,'m').value.trim():''};
-window.pk=async(id,lv)=>{const R=sel(id,'r'),M=sel(id,'m'),B=sel(id,'b'),H=$('#'+id);H.value='';
- try{if(lv==='r'){opt(B,'Select city / municipality first');if(!R.value)return opt(M,'Select region first');opt(M,'Loading…');
-   const[pv,cm]=await Promise.all([pg(`regions/${R.value}/provinces`).catch(()=>[]),pg(`regions/${R.value}/cities-municipalities`)]),pn=Object.fromEntries(pv.map(p=>[p.code,p.name])),g={};
-   cm.forEach(c=>{const k=pn[c.provinceCode]||R.selectedOptions[0].text;(g[k]=g[k]||[]).push(c)});
-   M.innerHTML='<option value="">Select city / municipality</option>'+Object.keys(g).sort().map(k=>`<optgroup label="${esc(k)}">${g[k].sort((a,b)=>a.name.localeCompare(b.name)).map(c=>`<option value="${c.code}">${esc(c.name)}</option>`).join('')}</optgroup>`).join('');M.disabled=false}
-  if(lv==='m'){if(!M.value)return opt(B,'Select city / municipality first');opt(B,'Loading…');const bs=await pg(`cities-municipalities/${M.value}/barangays`);
-   B.innerHTML='<option value="">Select barangay</option>'+bs.sort((a,b)=>a.name.localeCompare(b.name)).map(b=>`<option value="${b.code}">${esc(b.name)}</option>`).join('');B.disabled=false}
-  if(lv==='b'&&B.value)H.value=B.selectedOptions[0].text+', '+M.selectedOptions[0].text}
- catch(e){opt(lv==='r'?M:B,'Could not load. Pick again to retry');alert('Could not load the address list. Check your internet connection.')}};
-register=function(){const tv=s=>s.tagName==='SELECT'?s.selectedOptions[0].text:s.value.trim();
- A.innerHTML=logo+`<div class=row><div><label>Last name *</label><input id=ln autocomplete=family-name></div><div><label>First name *</label><input id=fn autocomplete=given-name></div></div><div class=row><div><label>Middle name</label><input id=mn2 autocomplete=additional-name></div><div><label>Suffix</label><select id=sf><option value="">None<option>Jr.<option>Sr.<option>II<option>III<option>IV</select></div></div><label>Email address *</label><input id=em type=email inputmode=email autocomplete=email placeholder="name@example.com"><label>Mobile number * <span class=mut>(receives SMS vouchers)</span></label><input id=ph inputmode=tel autocomplete=tel placeholder="09XX XXX XXXX">${pick('rg')}<label>Household members</label><input id=m type=number min=1 max=30 value=4><label>Password * <span class=mut>(6+ characters)</span></label><input id=pw type=password autocomplete=new-password><label>Confirm password *</label><input id=pw2 type=password autocomplete=new-password><label style="display:flex;gap:10px;align-items:flex-start;font-weight:400;margin-top:16px"><input id=cs type=checkbox style="width:22px;height:22px;flex:none"> I consent to the collection and processing of my personal data for disaster-relief distribution, as provided by the Data Privacy Act of 2012 (RA 10173).</label><button class=big id=go>CREATE ACCOUNT</button><div class=mut id=rerr style="color:#f7c;margin-top:6px"></div><button class=link id=back>Back to Login</button>`;
- initPick('rg');$('#back').onclick=()=>{msg='';login()};
- $('#go').onclick=async()=>{const v=i=>$('#'+i).value.trim(),e=t=>{$('#rerr').textContent=t},B=sel('rg','b'),f={first:v('fn'),last:v('ln'),middle:v('mn2'),suffix:$('#sf').value,email:v('em').toLowerCase(),phone:v('ph').replace(/\s/g,''),members:$('#m').value,pw:$('#pw').value,consent:$('#cs').checked,region:tv(sel('rg','r')),muni:tv(sel('rg','m')),brgy:tv(B),psgc:B.tagName==='SELECT'?B.value:(B.value.trim()?'MANUAL':'')};
-  if(!f.first||!f.last)return e('Enter your first and last name');if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email))return e('Enter a valid email address');if(!/^09\d{9}$/.test(f.phone))return e('Mobile number must be 11 digits starting with 09');
-  if(!f.psgc)return e('Select your region, city / municipality and barangay');if(f.pw.length<6)return e('Password must be at least 6 characters');if(f.pw!==$('#pw2').value)return e('Passwords do not match');if(!f.consent)return e('Please accept the data privacy consent');
-  $('#go').disabled=true;try{await api('/api/register',f);await enter(await api('/api/login',{phone:f.phone,pw:f.pw}))}catch(x){e(x.message);$('#go').disabled=false}}};
-if(ME)render();
+const pgc = {},
+  pg = (p) =>
+    pgc[p]
+      ? Promise.resolve(pgc[p])
+      : fetch("/api/psgc?p=" + p)
+          .then((r) => (r.ok ? r.json() : Promise.reject()))
+          .then((d) => (pgc[p] = d));
+const sel = (id, k) => $("#" + id + "_" + k),
+  opt = (s, t) => {
+    s.innerHTML = `<option value="">${t}</option>`;
+    s.disabled = true;
+  };
+function pick(id) {
+  return `<label>Region *</label><select id=${id}_r onchange="pk('${id}','r')"><option value="">Select region</option></select><label>City / Municipality *</label><select id=${id}_m onchange="pk('${id}','m')" disabled><option value="">Select region first</option></select><label>Barangay *</label><select id=${id}_b onchange="pk('${id}','b')" disabled><option value="">Select city / municipality first</option></select><input type=hidden id=${id}>`;
+}
+async function initPick(id) {
+  try {
+    const rg = await pg("regions");
+    sel(id, "r").innerHTML =
+      '<option value="">Select region</option>' +
+      rg
+        .map(
+          (r) =>
+            `<option value="${r.code}">${esc((r.regionName ? r.regionName + " – " : "") + r.name)}</option>`,
+        )
+        .join("");
+  } catch (e) {
+    ["Region", "City / Municipality", "Barangay"].forEach((t, i) => {
+      const s = sel(id, "rmb"[i]);
+      if (s)
+        s.outerHTML = `<input id=${id}_${"rmb"[i]} placeholder="${t}" oninput="pm('${id}')">`;
+    });
+  }
+}
+window.pm = (id) => {
+  const b = sel(id, "b").value.trim();
+  $("#" + id).value = b ? b + ", " + sel(id, "m").value.trim() : "";
+};
+window.pk = async (id, lv) => {
+  const R = sel(id, "r"),
+    M = sel(id, "m"),
+    B = sel(id, "b"),
+    H = $("#" + id);
+  H.value = "";
+  try {
+    if (lv === "r") {
+      opt(B, "Select city / municipality first");
+      if (!R.value) return opt(M, "Select region first");
+      opt(M, "Loading…");
+      const [pv, cm] = await Promise.all([
+          pg(`regions/${R.value}/provinces`).catch(() => []),
+          pg(`regions/${R.value}/cities-municipalities`),
+        ]),
+        pn = Object.fromEntries(pv.map((p) => [p.code, p.name])),
+        g = {};
+      cm.forEach((c) => {
+        const k = pn[c.provinceCode] || R.selectedOptions[0].text;
+        (g[k] = g[k] || []).push(c);
+      });
+      M.innerHTML =
+        '<option value="">Select city / municipality</option>' +
+        Object.keys(g)
+          .sort()
+          .map(
+            (k) =>
+              `<optgroup label="${esc(k)}">${g[k]
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((c) => `<option value="${c.code}">${esc(c.name)}</option>`)
+                .join("")}</optgroup>`,
+          )
+          .join("");
+      M.disabled = false;
+    }
+    if (lv === "m") {
+      if (!M.value) return opt(B, "Select city / municipality first");
+      opt(B, "Loading…");
+      const bs = await pg(`cities-municipalities/${M.value}/barangays`);
+      B.innerHTML =
+        '<option value="">Select barangay</option>' +
+        bs
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((b) => `<option value="${b.code}">${esc(b.name)}</option>`)
+          .join("");
+      B.disabled = false;
+    }
+    if (lv === "b" && B.value)
+      H.value = B.selectedOptions[0].text + ", " + M.selectedOptions[0].text;
+  } catch (e) {
+    opt(lv === "r" ? M : B, "Could not load. Pick again to retry");
+    alert("Could not load the address list. Check your internet connection.");
+  }
+};
+register = function () {
+  const tv = (s) =>
+    s.tagName === "SELECT" ? s.selectedOptions[0].text : s.value.trim();
+  A.innerHTML =
+    logo +
+    `<div class=row><div><label>Last name *</label><input id=ln autocomplete=family-name></div><div><label>First name *</label><input id=fn autocomplete=given-name></div></div><div class=row><div><label>Middle name</label><input id=mn2 autocomplete=additional-name></div><div><label>Suffix</label><select id=sf><option value="">None<option>Jr.<option>Sr.<option>II<option>III<option>IV</select></div></div><label>Email address *</label><input id=em type=email inputmode=email autocomplete=email placeholder="name@example.com"><label>Mobile number * <span class=mut>(receives SMS vouchers)</span></label><input id=ph inputmode=tel autocomplete=tel placeholder="09XX XXX XXXX">${pick("rg")}<label>Household members</label><input id=m type=number min=1 max=30 value=4><label>Password * <span class=mut>(6+ characters)</span></label><input id=pw type=password autocomplete=new-password><label>Confirm password *</label><input id=pw2 type=password autocomplete=new-password><label style="display:flex;gap:10px;align-items:flex-start;font-weight:400;margin-top:16px"><input id=cs type=checkbox style="width:22px;height:22px;flex:none"> I consent to the collection and processing of my personal data for disaster-relief distribution, as provided by the Data Privacy Act of 2012 (RA 10173).</label><button class=big id=go>CREATE ACCOUNT</button><div class=mut id=rerr style="color:#f7c;margin-top:6px"></div><button class=link id=back>Back to Login</button>`;
+  initPick("rg");
+  $("#back").onclick = () => {
+    msg = "";
+    login();
+  };
+  $("#go").onclick = async () => {
+    const v = (i) => $("#" + i).value.trim(),
+      e = (t) => {
+        $("#rerr").textContent = t;
+      },
+      B = sel("rg", "b"),
+      f = {
+        first: v("fn"),
+        last: v("ln"),
+        middle: v("mn2"),
+        suffix: $("#sf").value,
+        email: v("em").toLowerCase(),
+        phone: v("ph").replace(/\s/g, ""),
+        members: $("#m").value,
+        pw: $("#pw").value,
+        consent: $("#cs").checked,
+        region: tv(sel("rg", "r")),
+        muni: tv(sel("rg", "m")),
+        brgy: tv(B),
+        psgc: B.tagName === "SELECT" ? B.value : B.value.trim() ? "MANUAL" : "",
+      };
+    if (!f.first || !f.last) return e("Enter your first and last name");
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email))
+      return e("Enter a valid email address");
+    if (!/^09\d{9}$/.test(f.phone))
+      return e("Mobile number must be 11 digits starting with 09");
+    if (!f.psgc)
+      return e("Select your region, city / municipality and barangay");
+    if (f.pw.length < 6) return e("Password must be at least 6 characters");
+    if (f.pw !== $("#pw2").value) return e("Passwords do not match");
+    if (!f.consent) return e("Please accept the data privacy consent");
+    $("#go").disabled = true;
+    try {
+      await api("/api/register", f);
+      await enter(await api("/api/login", { phone: f.phone, pw: f.pw }));
+    } catch (x) {
+      e(x.message);
+      $("#go").disabled = false;
+    }
+  };
+};
+if (ME) render();
